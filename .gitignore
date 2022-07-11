@@ -4,3 +4,5 @@ old
 logs
 .ipynb_checkpoints
 *.h5
+*.pt
+*.xls
