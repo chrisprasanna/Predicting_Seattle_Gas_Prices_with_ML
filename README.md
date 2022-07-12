@@ -1,1 +1,1 @@
-# Predicting_Seattle_Gas_Prices
+# :car: Seattle Gas Price Prediction using Machine Learning :chart_with_upwards_trend:
