@@ -378,15 +378,16 @@ class HARHN(nn.Module):
         x = self.conv_to_enc(x)
         x, h_T_L = self.RHNEncoder(x) # h_T_L.shape = (batch_size, T, n_units_enc, rec_depth)
         s = torch.zeros(x.shape[0], self.n_units_dec).to(self.device)
+        
         for t in range(self.T):
             s_rep = s.unsqueeze(1)
-            s_rep = s_rep.repeat(1, self.T, 1)
+            s_rep = s_rep.repeat(1, self.T, 1)           
             d_t = []
             for k in range(self.rec_depth):
                 h_T_k = h_T_L[..., k]
                 a = self.U_k[k](h_T_k)
-                b = self.T_k[k](s_rep)
-                e_t_k = self.v_k[k](torch.tanh(self.T_k[k](s_rep) + self.U_k[k](h_T_k)))
+                b = self.T_k[k](s_rep)               
+                e_t_k = self.v_k[k](torch.tanh(b + a))
                 alpha_t_k = torch.softmax(e_t_k, 1)
                 d_t_k = torch.sum(h_T_k*alpha_t_k, dim=1)
                 d_t.append(d_t_k)
