@@ -122,7 +122,7 @@ class InputAttentionEncoder(nn.Module):
             h_tm1, s_tm1 = self.encoder_lstm(weighted_inputs, (h_tm1, s_tm1))
             
             encoded_inputs[:, t, :] = h_tm1
-        return encoded_inputs
+        return encoded_inputs, alpha_k_t
     
 class TemporalAttentionDecoder(nn.Module):
     def __init__(self, M, P, T, device, stateful=False):
@@ -192,7 +192,7 @@ class TemporalAttentionDecoder(nn.Module):
 
         #calculate output
         y_Tp1 = self.v_y(self.W_y(d_c_concat))
-        return y_Tp1
+        return y_Tp1, beta_i_t
     
 class DARNN(nn.Module):
     def __init__(self, N, M, P, T, device, stateful_encoder=False, stateful_decoder=False):
@@ -214,6 +214,7 @@ class DARNN(nn.Module):
         self.encoder = InputAttentionEncoder(N, M, T, device, stateful_encoder).to(device)
         self.decoder = TemporalAttentionDecoder(M, P, T, device, stateful_decoder).to(device)
     def forward(self, X_history, y_history):
-        out = self.decoder(self.encoder(X_history), y_history)
-        return out
+        encoder_out, alpha = self.encoder(X_history)
+        out, beta = self.decoder(encoder_out, y_history)
+        return out, alpha, beta
 
