@@ -5,3 +5,4 @@ logs
 .ipynb_checkpoints
 *.pt
 *.xls
+.vscode
