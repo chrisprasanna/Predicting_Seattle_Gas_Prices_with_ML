@@ -14,7 +14,7 @@
 
 As of the summer of 2022, there has been a dramatic hike in the cost of retail gasoline. I live in Seattle, where the cost of living is alreday 53% higher than the national average, and I know a lot of individuals who have been hit especially hard due to higher energy costs. It would be very useful to find out if retail gas prices will increase, stay steady, or decrease a week in advance. Having access to this information may give some added flexibility to household budgets, particularly for those who have a large share of their income going toward essential costs such as transpotation, housing, and food.
 
-In this project, I went through an end-to-end data science/machine learning workflow to create accurate models that predict retail gas prices in Seattle a week in advance. Two different types of forecasting techniques, time series and deep learning algorithms, were used for model development. For time series modeling, Facebook's [Prophet](https://facebook.github.io/prophet/) and [NeuralProphet](https://github.com/ourownstory/neural_prophet) models were implemented. For deep learning modeling, [Long Short-Term Memory (LSTM)](https://en.wikipedia.org/wiki/Long_short-term_memory), [Dual-stage Attention-based Recurrent Neural Network (DA-RNN)](https://arxiv.org/abs/1704.02971), and [Hierarchical attention-based Recurrent-Highway-Network (HRHN)](https://arxiv.org/abs/1806.00685) models were implemented. The models were trained using time series data from the [U.S. Energy Information Administration](https://www.eia.gov/) and the deep learning models were built using the [PyTorch](https://pytorch.org/) framework.
+In this project, I went through an end-to-end data science/machine learning workflow to create accurate models that predict retail gas prices in Seattle a week in advance. Two different types of forecasting techniques, time series and deep learning algorithms, were used for model development. For time series modeling, [Facebook Prophet](https://facebook.github.io/prophet/) and [NeuralProphet](https://github.com/ourownstory/neural_prophet) models were implemented. For deep learning modeling, [Long Short-Term Memory (LSTM)](https://en.wikipedia.org/wiki/Long_short-term_memory), [Dual-stage Attention-based Recurrent Neural Network (DA-RNN)](https://arxiv.org/abs/1704.02971), and [Hierarchical attention-based Recurrent-Highway-Network (HRHN)](https://arxiv.org/abs/1806.00685) models were implemented. The models were trained using time series data from the [U.S. Energy Information Administration](https://www.eia.gov/) and the deep learning models were built using the [PyTorch](https://pytorch.org/) framework.
 
 The machine learning (ML) workflow preesnted in this project goes through the following steps:
 
@@ -177,9 +177,9 @@ target_ = data[target_name].shift(-prediction_horizon).fillna(method="ffill").va
 ```
 </details> -->
 
-After transforming the dataset, the shape of our feature variable array `X_` is `(835, 4, 15)`, where the first dimension represents the 835 datapoints (i.e., timesteps), the second dimension represents the 4 historical values at each datapoint, and the third dimension represents the particular time series for each of the 15 feature variables. Note that the historical target variable values are kept separate in the `y_` array. The target variable values at each of the 835 datapoints are stored in the `target_` variable. 
+After transforming the dataset, the shape of our feature variable array `X_` is `(835, 4, 15)`, where the first dimension represents the 835 datapoints (i.e., timesteps), the second dimension represents the 4 historical values at each datapoint, and the third dimension represents the particular time series for each of the 15 feature variables. Note that the historical target variable values are kept separate in the `y_` array. The target variable values at each of the 835 datapoints are stored in the `target_` variable.
 
-The next step is to split the dataset into three parts: training, validation, and testing. The training dataset is used to train the model and adjust its parameters. In other words, the model sees and learns from this data. The validation dataset is used to periodically evaluate the model during training. The models "see" this data, but they never learn from it. This dataset provides an unbiased evaluation of the model fit on the training dataset while tuning model hyperparameters. It is also useful for implementing callbacks such as early stopping and learning rate schedulers, which can help prevent overfitting. The test dataset is used to provide an unbiased evaluation of the final model fit on the training dataset. It is only used once the models are completely trained and let's us compare the performance of competing models. I split the data into a 70-15-15 split where 70% of the data is used foor training, the next 15% used for validation, and the remaining 15% for testing. 
+The next step is to split the dataset into three parts: training, validation, and testing. The training dataset is used to train the model and adjust its parameters. In other words, the model sees and learns from this data. The validation dataset is used to periodically evaluate the model during training. The models "see" this data, but they never learn from it. This dataset provides an unbiased evaluation of the model fit on the training dataset while tuning model hyperparameters. It is also useful for implementing callbacks such as early stopping and learning rate schedulers, which can help prevent overfitting. The test dataset is used to provide an unbiased evaluation of the final model fit on the training dataset. It is only used once the models are completely trained and let's us compare the performance of competing models. I split the data into a 70-15-15 split where 70% of the data is used foor training, the next 15% used for validation, and the remaining 15% for testing.
 
 <!-- <details>
 <summary>View codes</summary>
@@ -211,6 +211,8 @@ target_val = target[train_length:train_length+val_length]
 target_test = target[-val_length:]
 ```
 </details> -->
+
+![split](.images/../images/train-val-split.png)
 
 The next data preparation step is to normalize the time series data. Since we are dealing with a number of feature variables with different units and a wide range of magnitudes, it is important that no single variable steers the model behavior in a particular direction just biggest it contains bigger numbers. The goal of normalization is to change the values of all the time series to a common scale, without distorting the differences in the shape of each time series. To normalize the machine learning model, values are shifted and rescaled so their range can vary between 0 and 1.
 
@@ -280,6 +282,14 @@ data_test_loader = DataLoader(TensorDataset(X_test_t, y_his_test_t, target_test_
 </details> -->
 
 ### Develop the Models
+
+A total of five models were developed for this project. Let's start with the time series models. The first one is Prophet, a model that Facebook/Meta developed that decomposes time series into various time-varying components (e.g., daily seasonality, weekly seasonality, yearly seasonality, trend, and holidays/events). In essence, this is an additive model that sums different linear regressors. But what if we want to use nonlinear regressors?
+
+NeuralProphet was developed to extend the Prophet model with an autoregressive network (AR-Net). This AR-Net term uses a feedforward neural network to learn an autoregressive model that uses local context information from the time series to add lagged covariates. NeuralProphet also includes all the components from the original Prophet model as regressors. NeuralProphet is more expressive than its predecessor and it also scales much better to larger datasets (i.e., its training time complexity is nearly constant as the number of model inputs increases compared to classic autoregresion that scales exponentially). The downside of NeuralProphet is that it includes a much larger number of learnable parameters and as a result, you need a lot more taining data.
+
+Since Prophet and NeuralProphet are open source projects, I would suggest checking out their own documentation if you need any more details. Both models also automatically tune hyperparameters, which makes implementation very easy. Of course, if you want to manually tune hyperparameters yourself, you have the ability to do so. One thing I will note that is these time series models work best with time series that have strong seasonal effects. Retail gas prices due exhibit some seasonal behavior (e.g., gas prices rise in the summer and lower in the winter). However, are there other external factors or irregular events that can significantly affect gas prices?
+
+Let's move to the deep neural networks, where we will have to do a bit of development ourselves using PyTorch. 
 
 ### Train the Models
 
