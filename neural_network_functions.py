@@ -198,7 +198,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     err = true - preds
     
     # Time series plot
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 6), facecolor=(1, 1, 1))
     plt.plot(preds, label='preds')
     plt.plot(true, marker=".", markersize=10, color='black', linestyle = 'None', label='actual')
     plt.legend(loc="upper left")
@@ -208,7 +208,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     plt.show()
     
     # Scatter Plot
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(8, 8), facecolor=(1, 1, 1))
     sns.regplot(ax=ax, x=true, y=preds)
     ax.set_xlabel('True Values', fontsize=12)
     ax.set_ylabel('Predictions', fontsize=12)
@@ -216,8 +216,8 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     ax.set_aspect('equal', 'box')
     
     # Error Histogram
-    fig, ax = plt.subplots(figsize=(12, 6))
-    sns.histplot(ax=ax, data=err, kde=True)
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor=(1, 1, 1))
+    sns.histplot(ax=ax, data=err, kde=True, bins=10)
     ax.set_xlabel('Prediction Errors (U.S. $)', fontsize=12)
     ax.set_ylabel('Count', fontsize=12)
     ax.set_title(f'Model Testing Prediction Errors \n MSE = {mse:.3f} \n MAE = {mae:.3f}', fontsize=15)
@@ -225,7 +225,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     if model_name == 'darnn':
         alphas = alphas.mean(axis=0)
         betas = betas.mean(axis=0).squeeze()
-        # betas = betas[::-1]
+        betas = betas[::-1]
 
         attn = np.zeros([len(alphas), len(betas)])
         for i in range(len(alphas)):
@@ -238,7 +238,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
         max_range = max_attn - (0.25 * (max_attn - min_attn))
 
         # Attention Weights Heatmap
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10), facecolor=(1, 1, 1))
         im = ax.imshow(attn, cmap='rainbow')
         # cols = features_targets.columns[0:-1].tolist()
         ax.set_xticks(np.arange(len(betas)))
@@ -260,7 +260,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
         plt.show()
         
         # Feature Importance Bar Plot
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(8, 8), facecolor=(1, 1, 1))
         plt.title("Feature Importance\n(All Timesteps along Lookback Window)")
         plt.bar(range(len(cols)), alphas)
         plt.xticks(range(len(cols)), cols, rotation=90)
@@ -313,7 +313,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     next_week = plot_date_test[-1] + dt.timedelta(days=7)
     plot_date_test.append(next_week)
 
-    fig = figure(figsize=(25, 5), dpi=80)
+    fig = figure(figsize=(25, 5), dpi=80, facecolor=(1, 1, 1))
     fig.patch.set_facecolor((1.0, 1.0, 1.0))
     plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices", marker=".", markersize=10, color='black')
     plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted prices", marker=".", markersize=10)

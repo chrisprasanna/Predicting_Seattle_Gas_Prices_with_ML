@@ -333,23 +333,25 @@ class ConvBlock(nn.Module):
     def __init__(self, T, in_channels, n_filters=32, filter_size=5):
         super(ConvBlock, self).__init__()
         padding1 = self._calc_padding(T, filter_size)
+        
+        # Conv     
         self.conv = nn.Conv1d(in_channels, n_filters, filter_size, padding=padding1)
         self.relu = nn.ReLU()
-        self.maxpool = nn.AdaptiveMaxPool1d(T)
+        self.maxpool = nn.AdaptiveMaxPool1d(T, return_indices=True)
         self.zp = nn.ConstantPad1d((1, 0), 0)
+        
     def _calc_padding(self, Lin, kernel, stride=1, dilation=1):
         p = int(((Lin - 1) * stride + 1 + dilation * (kernel - 1) - Lin) / 2)
         return p
     
-    def forward(self, x):
+    def forward(self, x):       
         x = x.permute(0, 2, 1)
         x = self.conv(x)
         x = self.relu(x)
-        x = self.maxpool(x)
-        x = x.permute(0, 2, 1)
+        x, indices = self.maxpool(x)
+        x = x.permute(0, 2, 1)  
         return x
-    
-    
+        
 class HARHN(nn.Module):
     def __init__(self, n_conv_layers, T, in_feats, target_feats, n_units_enc=32, n_units_dec=32, enc_input_size=32, rec_depth=3,
                  out_feats=1, n_filters=32, filter_size=5, device='cpu'):
@@ -375,6 +377,7 @@ class HARHN(nn.Module):
     def forward(self, x, y):
         for l in range(self.n_convs):
             x = self.convs[l](x)
+            
         x = self.conv_to_enc(x)
         x, h_T_L = self.RHNEncoder(x) # h_T_L.shape = (batch_size, T, n_units_enc, rec_depth)
         s = torch.zeros(x.shape[0], self.n_units_dec).to(self.device)
