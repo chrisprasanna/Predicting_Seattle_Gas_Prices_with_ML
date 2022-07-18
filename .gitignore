@@ -6,3 +6,5 @@ logs
 *.pt
 *.xls
 .vscode
+.markdownlint.json
+research
