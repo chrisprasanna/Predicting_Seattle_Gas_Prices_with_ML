@@ -73,8 +73,9 @@ This section goes over the essential tasks of the end-to-end ML pipeline. Code s
 Before we can predict future gas prices, we'll need to acquire the historical time series data to train our models. For this, we will write Python code that downloads CSV files from [eia.gov](https://www.eia.gov/) and stores the data as variables. This way we won't have to worry about updating local CSV files on our machine with the most recent data. Instead, EIA does this for us. Thanks, government!
 
 The following function uses the link address from EIA to download the CSV, parse through the data, and format the time series data as a Pandas DataFrame.
-<!-- <details>
-<summary>View codes</summary>
+
+<details>
+<summary>View code</summary>
 
 ```python
 def download_data(url, name='', usecols=None, sheet_name=1, header=2, plot=False): 
@@ -119,7 +120,7 @@ def download_data(url, name='', usecols=None, sheet_name=1, header=2, plot=False
          
     return data_dict
 ```
-</details> -->
+</details>
 
 [Weekly Seattle retail gas price data (dollars/gallon)](https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EMM_EPMRU_PTE_Y48SE_DPG&f=W) is used as the target variable, which is the variable whose values we will model and predict. A feature variable is a variable whose values will be used to help predict the future value of the target variable. Note that the time series models (Prophet and NeuralProphet) use the historical values of the target variable as their only feature variable. The reason for this is that these are univariate models. In other words, they are able to forecast long-term behavior using recursion but the trade-off is that they can only deal with one time series. Univariate models do not utilize feature variables since they do not have access to their future values and as a results. The prediction accuracy of these models may be limited since there exist a large number of other time series that could affect retail gas prices and could help provide insights to our predictions.
 
@@ -151,8 +152,8 @@ Now that our program has downloaded the data, the next step is to prepare it for
 
 Note that we will implement a rolling window on the target variable as well as all the feature variables. In practice, choosing a window length appropriate to the temporal dependencies of the problem greatly simplifies training and performance of the network. Too short of a window length increases the chance that the model parameter estimates do not produce high-fidelity predictions. On the other hand, too long of a window length increases the chance that you are trying to stretch your model to cover more cases than it can accurately represent. For this application, including sequences up to 8 weeks into the past seems to work well.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 timesteps = 8 # lookback window
@@ -174,14 +175,14 @@ for j in range(timesteps):
 prediction_horizon = 1
 target_ = data[target_name].shift(-prediction_horizon).fillna(method="ffill").values
 ```
-</details> -->
+</details>
 
 After transforming the dataset, the shape of our feature variable array `X_` is `(835, 8, 15)`, where the first dimension represents the 835 datapoints (i.e., timesteps), the second dimension represents the 8 historical values at each datapoint, and the third dimension represents the particular time series for each of the 15 feature variables. Note that the historical target variable values are kept separate in the `y_` array. The target variable values at each of the 835 datapoints are stored in the `target_` variable.
 
 The next step is to split the dataset into three parts: training, validation, and testing. The training dataset is used to train the model and adjust its parameters. In other words, the model sees and learns from this data. The validation dataset is used to periodically evaluate the model during training. The models "see" this data, but they never learn from it. This dataset provides an unbiased evaluation of the model fit on the training dataset while tuning model hyperparameters. It is also useful for implementing callbacks such as early stopping and learning rate schedulers, which can help prevent overfitting. The test dataset is used to provide an unbiased evaluation of the final model fit on the training dataset. It is only used once the models are completely trained and let's us compare the performance of competing models. I split the data into a 70-15-15 split where 70% of the data is used foor training, the next 15% used for validation, and the remaining 15% for testing.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 # Dataset indices
@@ -209,14 +210,14 @@ target_train = target[:train_length]
 target_val = target[train_length:train_length+val_length]
 target_test = target[-val_length:]
 ```
-</details> -->
+</details>
 
 ![split](.images/../images/train-val-split.png)
 
 The next data preparation step is to normalize the time series data. Since we are dealing with a number of feature variables with different units and a wide range of magnitudes, it is important that no single variable steers the model behavior in a particular direction just biggest it contains bigger numbers. The goal of normalization is to change the values of all the time series to a common scale, without distorting the differences in the shape of each time series. To normalize the machine learning model, values are shifted and rescaled so their range can vary between 0 and 1.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 class Normalizer():
@@ -254,14 +255,14 @@ target_train = target_scaler.fit_transform(target_train)
 target_val = target_scaler.transform(target_val)
 target_test = target_scaler.transform(target_test)
 ```
-</details> -->
+</details>
 
 Notice that we use the maximum and minimum parameters from the trianing dataset to normalize both the validation and test dataset. This is because the validation and testing datapoints represent real-world data that we are using to evaluate our models. By using the training dataset normalization parameters on all three datasets, we can see how well each model generalizes to new, unseen datapoints. 
 
 The final step is to convert the arrays into PyTorch tensor datasets and then translate the datasets into PyTorch DataLoader classes, which can iterate over a dataset during training. In addition, they are able to collect individually collected data samples and automatically convert them into batches. 
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 X_train_t = torch.Tensor(X_train)
@@ -278,7 +279,7 @@ data_train_loader = DataLoader(TensorDataset(X_train_t, y_his_train_t, target_tr
 data_val_loader = DataLoader(TensorDataset(X_val_t, y_his_val_t, target_val_t), shuffle=False, batch_size=batch_size)
 data_test_loader = DataLoader(TensorDataset(X_test_t, y_his_test_t, target_test_t), shuffle=False, batch_size=batch_size)
 ```
-</details> -->
+</details>
 
 ### Develop the Models
 
@@ -290,8 +291,8 @@ Since Prophet and NeuralProphet are open source projects, I would suggest checki
 
 Let's move to the deep neural networks, where we will have to do a bit of development ourselves using PyTorch. The first deep neural network model is the LSTM, which are designed for applications where the input is an ordered sequence and information from earlier in the sequence may be important for predicting future values. LSTM models fall within a family of models called recurrent neural networks where model outputs from previous steps are used as inputs for the next step (i.e., feedback connections). LSTM uses an internal state (i.e., a working memory space) in addition to new inputs and previous model outputs to determine predictions. The internal state is updated after every prediciton using gate mechanisms that control the flow of information. These features make LSTMs particularly good at learning long-term dependencies within the data. Another advantage of LSTMs over recurrent neural networks is that they are able to deal with the problem of vanishing gradients.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 class LSTM(nn.Module):
@@ -336,12 +337,12 @@ class LSTM(nn.Module):
             self.num_layers, batch_size, self.hidden_size)).to(self.device)
         return h_0, c_0
 ```
-</details> -->
+</details>
 
 Transformers and attention-based encoder-decoder models process sequential data similar to LSTMs. However, unlike LSTMs, they are capable of processing the entire input all at once. Through these model's attention mechanisms, context is provided for any position in the intput sequence. However, these models cannot explictly select relevant feature variables to make predictions, which is important when dealing with time series prediction applications. To address these limitations, Qin et al. developed a Dual-stage Attention-based Recurrent Network (DA-RNN) for time series prediction. The first attention mechanism in this model is used to adaptively extract the relevant feature variables at each timestep using information from the previous encoder hidden state. The second attention mechanism deals with temporal dependencies by selecting relevant encoder hidden states across the entire input sequence. These two attention models are integrated within a LSTM and altogether, the DA-RNN can adaptively select the most relevant input features as well as capture the long-term temporal dependencies of a time series appropriately.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 # %% Dual-Stage Attention-Based LSTM
@@ -501,12 +502,12 @@ class DARNN(nn.Module):
         out, beta = self.decoder(encoder_out, y_history)
         return out, alpha, beta
 ```
-</details> -->
+</details>
 
 More recently, Tao et al. proposed a new Hierarchical attention-based Recurrent Highway Network (HRHN) model to forecast time series based on historical target and feature variable data. The authors claim that the DA-RNN's two attention stages do not properly capture the correlations among the different components of the feature variable sequences. In addition, they discuss that the second attention stage does not capture the complicated temporal dynamics, especially with regards to the different neural network layers used for processing information from the feature variables. The HRHN first uses a convolutional network to learn the interactions among the different feature variables. Next, recurrent highway networks are used to segment the feature variable data into different semantics at each neural network layer to properly model their temporal behavior. Recurrent highway networks extend the LSTM architecture to allow step-to-step transition depths larger than one. A hierarchical attention mechanism is then performed on each semantic level to select the relevant information for the time series prediction task. HRHN models outperform other models at properly capturing and forecasting rare events, such as sudden changes and oscillations in time series data. This ability may be useful in forecasting gasp prices since they are susceptible to unexpected events such as legislative changes and geopolitical events. However, the interpretability of HRHN models is limited due to the inclusion of convolutional layers, which map and rehshape the input tensor to a feature map. Even with deconvolution, it may be difficult for us to interpret how the model is choosing relevant information within the feature data. Compare this to the DA-RNN, where we can easily extract the attention weights at each stage to get the relative importance of information at each timestep with respect to both feature variables and previous timesteps.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 # %% Hierarchical-Attention-Based-Recurrent-Highway-Network
@@ -720,14 +721,14 @@ class HARHN(nn.Module):
         y_T = self.W(s) + self.V(d_t)
         return y_T
 ```
-</details> -->
+</details>
 
 ### Train and Evaluate the Models
 
 The neural neworks can now be trained by iteratively making prediction on the training dataset and computing the mean squared error between the model predictions and actual values. The training algorithm will use the mean squared error values as a cost function to fine-tune the learnable parameters of the neural network via backpropogation. This process improves the neural network's ability to make accurate predictions and training is stopped when the level of performance on the validation dataset no longer shows improvements (i.e., [early stopping](https://github.com/Bjarten/early-stopping-pytorch)). To update the network parameters, the [AdamW optimizer](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html) is used. In addition, we use a [scheduler](https://pytorch.org/docs/master/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html) to adapt the learning rate when the cost function has stopped improving for a set number of epochs.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt, scheduler, target_scaler, device, plot=True):
@@ -819,12 +820,12 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
             plt.show()
     return
 ```
-</details> -->
+</details>
 
 Once the training process is complete, we can visually the performance of the model on the test dataset. If we see that the model can make accurate predictions on the test dataset, we know that it has succesfully learned patterns in the time series data and can generalize these patterns to unseen data. However, if the model predictions resemble the training and validation dataset, we can assume that the model has only learned to memorize the data rather than extract generalizable patterns. Therefore, the model may be overfit and we would need to adjust the hyperparameters.
 
-<!-- <details>
-<summary>View codes</summary>
+<details>
+<summary>View code</summary>
 
 ```python
 def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
@@ -944,7 +945,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     
     return mse, mae, r2, pcc, preds, true, alphas, betas
 ```
-</details> -->
+</details>
 
 This above code generates model performance metrics, a plot comparing the model predictions and actual data points on the test dataset, a scatter plot that visualizes the correlation between the predicted and actual values on the test dataset, and a prediction error histogram. For the DA-RNN, a heat map of the averge attention weights with respect to the different feature variables and previous timesetps is also generated. Finally, a bar plot is generated showing the relative importance of each feature variable according to the attention weight values.  
 
@@ -962,8 +963,10 @@ From the time series plot, we can see the predicted prices (blue) overlap with t
 
 Now that we have trained neural networks and validated their performance, we can start predicting the Seattle gas price of next week. The following code displays the model's predictive performance over the previous `plot_range` days and its future forecast.
 
-<!-- <details>
-<summary>View codes</summary>
+![darnn-forecast](.images/../images/darnn-forecast.png)
+
+<details>
+<summary>View code</summary>
 
 ```python
 def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x_scaler, y_his_scaler, target_scaler, device, dates, plot_range=10):
@@ -1025,7 +1028,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     
     return
 ```
-</details> -->
+</details>
 
 ## Model Comparisons
 
