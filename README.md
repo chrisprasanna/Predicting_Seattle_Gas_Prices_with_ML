@@ -1042,11 +1042,12 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 
 ## To Do List
 
-- Deploy models to a web app using Flask
-- Create full time series prediction visualization
-- Combine histograms of deep neural network models
-- Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
-- Do some data exploration with [Pandas Profiling](https://pypi.org/project/pandas-profiling/)
+- [] Add docstrings to all functions / clean up code
+- [] Deploy models to a web app using Flask
+- [] Create full time series prediction visualization
+- [] Combine histograms of deep neural network models
+- [] Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
+- [] Do some data exploration with [Pandas Profiling](https://pypi.org/project/pandas-profiling/)
 
 ## Credits
 - Yao Qin et al. [A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction](https://arxiv.org/abs/1704.02971)
