@@ -1045,7 +1045,6 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 - Deploy models to a web app using Flask
 - Create full time series prediction visualization
 - Combine histograms of deep neural network models
-- Add a time series precision-recall analysis
 - Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
 
 ## Credits
