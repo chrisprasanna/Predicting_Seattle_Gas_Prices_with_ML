@@ -1032,7 +1032,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 
 ## Model Comparisons
 
-|               | Root Mean Square Err. ($/gal) | Mean Absolute Err. ($/gal) | R2 Score | Pearson Corr. Coeff. |
+|     Model     | Root Mean Square Err. ($/gal) | Mean Absolute Err. ($/gal) | R2 Score | Pearson Corr. Coeff. |
 |---------------|:---------------------:|:------------------:|:--------:|:--------------------:|
 | Prophet       |         0.650         |        0.517       |   0.220  |         0.518        |
 | NeuralProphet |         0.693         |        0.571       |   0.114  |         0.718        |
