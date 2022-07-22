@@ -1173,10 +1173,10 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 
 ## To Do List
 
-- [ ] Add docstrings to all functions / clean up code
-- [ ] Deploy models to a web app using Flask
+- [x] Add docstrings to all functions / clean up code
 - [ ] Create full time series prediction visualization
 - [ ] Combine histograms of deep neural network models
+- [ ] Deploy models to a web app using Flask
 - [ ] Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
 - [ ] Do some data exploration with [Pandas Profiling](https://pypi.org/project/pandas-profiling/)
 
