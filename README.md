@@ -79,6 +79,20 @@ The following function uses the link address from EIA to download the CSV, parse
 
 ```python
 def download_data(url, name='', usecols=None, sheet_name=1, header=2, plot=False): 
+    """
+    This function downloads and extracts relevant data from downloadable XLS files embedded on eia.gov
+
+    Args:
+        url (str): link address of the EIA XLS file
+        name (str, optional): Name of the data variable. Defaults to ''.
+        usecols (str, optional): XLS columns to extract (e.g., 'A:B'). Defaults to None.
+        sheet_name (int, optional): Sheet number of the XLS file that contains the data. Defaults to 1.
+        header (int, optional): How many rows of the XLS file are header files. Defaults to 2.
+        plot (bool, optional): Option to plot the data variable. Defaults to False.
+
+    Returns:
+        dict: dictionary containing data, number of data points/elements, range of dates, and the data variable name
+    """
     global config
     
     r = requests.get(url)
@@ -120,6 +134,7 @@ def download_data(url, name='', usecols=None, sheet_name=1, header=2, plot=False
          
     return data_dict
 ```
+
 </details>
 
 [Weekly Seattle retail gas price data (dollars/gallon)](https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EMM_EPMRU_PTE_Y48SE_DPG&f=W) is used as the target variable, which is the variable whose values we will model and predict. A feature variable is a variable whose values will be used to help predict the future value of the target variable. Note that the time series models (Prophet and NeuralProphet) use the historical values of the target variable as their only feature variable. The reason for this is that these are univariate models. In other words, they are able to forecast long-term behavior using recursion but the trade-off is that they can only deal with one time series. Univariate models do not utilize feature variables since they do not have access to their future values and as a results. The prediction accuracy of these models may be limited since there exist a large number of other time series that could affect retail gas prices and could help provide insights to our predictions.
@@ -156,25 +171,25 @@ Note that we will implement a rolling window on the target variable as well as a
 <summary>View code</summary>
 
 ```python
-timesteps = 8 # lookback window
+timesteps = 8 # rolling lookback window length
 
 # Preallocate feature and target arrays
 X_ = np.zeros((len(data), timesteps, data.shape[1]-1))
 y_ = np.zeros((len(data), timesteps, 1))
 
-# Feature Variables
+# Include rolling lookback window sequences in feature array
 for i, name in enumerate(list(data.columns[:-1])):
     for j in range(timesteps):
         X_[:, j, i] = data[name].shift(timesteps - j - 1).fillna(method="bfill")
 
-# Historical Target Variable Values
+# Include rolling lookback window sequences in target history array
 for j in range(timesteps):
     y_[:, j, 0] = data[target_name].shift(timesteps - j - 1).fillna(method="bfill")
 
-# Target Variables
-prediction_horizon = 1
-target_ = data[target_name].shift(-prediction_horizon).fillna(method="ffill").values
+prediction_horizon = 1 # how far to train the neural nets to predict into the future
+target_ = data[target_name].shift(-prediction_horizon).fillna(method="ffill").values # shift target values 'prediction_horizon' times into the future
 ```
+
 </details>
 
 After transforming the dataset, the shape of our feature variable array `X_` is `(835, 8, 15)`, where the first dimension represents the 835 datapoints (i.e., timesteps), the second dimension represents the 8 historical values at each datapoint, and the third dimension represents the particular time series for each of the 15 feature variables. Note that the historical target variable values are kept separate in the `y_` array. The target variable values at each of the 835 datapoints are stored in the `target_` variable.
@@ -196,10 +211,12 @@ test_length = data.shape[0] - train_length - val_length
 
 print(train_length, val_length, test_length)
 
+# Exclude data points that don't have rolling window sequences
 X = X_[timesteps:]
 y = y_[timesteps:]
 target = target_[timesteps:]
 
+# Split into train-val-test datasets
 X_train = X[:train_length]
 y_his_train = y[:train_length]
 X_val = X[train_length:train_length+val_length]
@@ -227,6 +244,17 @@ class Normalizer():
         self.range = None
 
     def fit_transform(self, x):
+        """
+        This function computes the max, min and range of values from the training dataset
+        These values will be used to normalize the training, validation, and testing datasets
+        This function returns the normalized training dataset (values fall within [0:1])
+
+        Args:
+            x (numpy array): training data
+
+        Returns:
+            numpy array: _description_
+        """
         self.max = x.max(axis=0)
         self.min = x.min(axis=0)
         self.range = self.max - self.min
@@ -234,27 +262,50 @@ class Normalizer():
         return normalized_x
     
     def transform(self, x):
+        """
+        This function performs a normalization of the input dataset
+
+        Args:
+            x (numpy array): dataset that is being normalized based on the class instances 
+
+        Returns:
+            numpy array: normalized dataset
+        """
         return (x - self.min)/self.range
 
     def inverse_transform(self, x):
+        """
+        This function performs a de-normalization of the input dataset
+
+        Args:
+            x (numpy array): dataset that is being de-normalized based on the class instances
+
+        Returns:
+            numpy array: de-normalized dataset
+        """
         return (x*self.range) + self.min
 
+# Create normalizer class objects
 x_scaler = Normalizer()
 y_his_scaler = Normalizer()
 target_scaler = Normalizer()
 
+# Normalize features
 X_train = x_scaler.fit_transform(X_train)
 X_val = x_scaler.transform(X_val)
 X_test = x_scaler.transform(X_test)
 
+# Normalize target histories
 y_his_train = y_his_scaler.fit_transform(y_his_train)
 y_his_val = y_his_scaler.transform(y_his_val)
 y_his_test = y_his_scaler.transform(y_his_test)
 
+# Normalize target data
 target_train = target_scaler.fit_transform(target_train)
 target_val = target_scaler.transform(target_val)
 target_test = target_scaler.transform(target_test)
 ```
+
 </details>
 
 Notice that we use the maximum and minimum parameters from the training dataset to normalize both the validation and test dataset. This is because the validation and testing datapoints represent real-world data that we are using to evaluate our models. By using the training dataset normalization parameters on all three datasets, we can see how well each model generalizes to new, unseen datapoints.
@@ -265,6 +316,7 @@ The final step is to convert the arrays into PyTorch tensor datasets and then tr
 <summary>View code</summary>
 
 ```python
+# Build Datasets
 X_train_t = torch.Tensor(X_train)
 X_val_t = torch.Tensor(X_val)
 X_test_t = torch.Tensor(X_test)
@@ -275,10 +327,14 @@ target_train_t = torch.Tensor(target_train)
 target_val_t = torch.Tensor(target_val)
 target_test_t = torch.Tensor(target_test)
 
+batch_size = 32
+
+# Build PyTorch DataLoaders
 data_train_loader = DataLoader(TensorDataset(X_train_t, y_his_train_t, target_train_t), shuffle=True, batch_size=batch_size)
 data_val_loader = DataLoader(TensorDataset(X_val_t, y_his_val_t, target_val_t), shuffle=False, batch_size=batch_size)
 data_test_loader = DataLoader(TensorDataset(X_test_t, y_his_test_t, target_test_t), shuffle=False, batch_size=batch_size)
 ```
+
 </details>
 
 ### Develop the Models
@@ -297,20 +353,20 @@ Let's move to the deep neural networks, where we will have to do a bit of develo
 ```python
 class LSTM(nn.Module):
 
-    def __init__(self, num_classes, input_size, hidden_size, num_layers, seq_length, device, dropout=0.1):
+    def __init__(self, num_outputs, input_size, hidden_size, num_layers, seq_length, device, dropout=0.1):
         super(LSTM, self).__init__()
         
-        self.num_classes = num_classes
-        self.num_layers = num_layers
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.seq_length = seq_length
-        self.device = device
+        self.num_outputs = num_outputs # model output size
+        self.num_layers = num_layers # number of lstm layers
+        self.input_size = input_size # model input size
+        self.hidden_size = hidden_size # number of hidden units in each lstm layer
+        self.seq_length = seq_length # rolling lookback window length
+        self.device = device # training device (i.e., 'cpu' or 'cuda')
         
+        # Define network layer types
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True, dropout=dropout)
-        
-        self.fc = nn.Linear(hidden_size, num_classes)
+                            num_layers=num_layers, batch_first=True, dropout=dropout)      
+        self.fc = nn.Linear(hidden_size, num_outputs)
         
         # Define activation function
         self.relu = nn.ReLU()
@@ -323,7 +379,7 @@ class LSTM(nn.Module):
         # combine  x and y history tensors
         x = torch.cat((x, y_hist), dim=-1)
         
-        output, (hn, cn) = self.lstm(x, (h_0, c_0)) #lstm with input, hidden, and internal state
+        output, (hn, cn) = self.lstm(x, (h_0, c_0)) # lstm with input, hidden, and internal state
         out = self.relu(output[:,-1,:])
         out = self.fc(out) 
         
@@ -337,6 +393,7 @@ class LSTM(nn.Module):
             self.num_layers, batch_size, self.hidden_size)).to(self.device)
         return h_0, c_0
 ```
+
 </details>
 
 Transformers and attention-based encoder-decoder models process sequential data similar to LSTMs. However, unlike LSTMs, they are capable of processing the entire input all at once. Through these model's attention mechanisms, context is provided for any position in the input sequence. However, these models cannot explicitly select relevant feature variables to make predictions, which is important when dealing with time series prediction applications. To address these limitations, Qin et al. developed a Dual-stage Attention-based Recurrent Network (DA-RNN) for time series prediction. The first attention mechanism in this model is used to adaptively extract the relevant feature variables at each timestep using information from the previous encoder hidden state. The second attention mechanism deals with temporal dependencies by selecting relevant encoder hidden states across the entire input sequence. These two attention models are integrated within a LSTM and altogether, the DA-RNN can adaptively select the most relevant input features as well as capture the long-term temporal dependencies of a time series appropriately.
@@ -732,6 +789,21 @@ The neural networks can now be trained by iteratively making prediction on the t
 
 ```python
 def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt, scheduler, target_scaler, device, plot=True):
+    """
+    This function performs the neural network training pipeline
+
+    Args:
+        model (PyTorch object): _description_
+        model_name (str): model name. Options are 'lstm', 'darnn', or 'harhn'
+        epochs (int): maximum number of training epochs
+        data_train_loader (PyTorch DataLoader object): training data loader
+        data_val_loader (PyTorch DataLoader object): validation data loader
+        opt (PyTorch Optimizer object): neural network training optimizer 
+        scheduler (PyTorch Scheduler object): learning rate scheduler 
+        target_scaler (Normalizer object): Normalizer object to de-normalize target data for plotting
+        device (str): training device (e.g., 'cpu' or 'cuda')
+        plot (bool, optional): _description_. Defaults to True.
+    """
     
     loss = nn.MSELoss()
 
@@ -739,15 +811,18 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
     early_stopping = EarlyStopping(patience=50, verbose=True, path=f'{model_name}.pt') 
 
     for i in range(epochs):
+        
+        ### ========== TRAINING ========== ###
         mse_train = 0
-
         for batch_x, batch_y_h, batch_y in data_train_loader :
-
+            
+            # Extract data and initialize optimizer 
             batch_x = batch_x.to(device)  
             batch_y = batch_y.to(device)
             batch_y_h = batch_y_h.to(device)
             opt.zero_grad()
             
+            # Forward prediction
             if model_name == 'lstm':
                 h, c = model.init_hidden_internal(batch_x.shape[0])
                 y_pred, h, c = model(batch_x, batch_y_h, h, c)
@@ -756,22 +831,32 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
             elif model_name == 'harhn':
                 y_pred = model(batch_x, batch_y_h)
 
+            # Compute loss
             y_pred = y_pred.squeeze(1)        
             l = loss(y_pred, batch_y)
+            
+            # Backwards pass
             l.backward()
+            
+            # Collect training loss
             mse_train += l.item()*batch_x.shape[0]
+            
+            # Step optimizer
             opt.step()
 
+        ### ========== Validation ========== ###
         with torch.no_grad():
             mse_val = 0
             preds = []
             true = []
             for batch_x, batch_y_h, batch_y in data_val_loader:
 
+                # Extract data
                 batch_x = batch_x.to(device)
                 batch_y = batch_y.to(device)
                 batch_y_h = batch_y_h.to(device)
                 
+                # Forward predictions
                 if model_name == 'lstm':
                     h, c = model.init_hidden_internal(batch_x.shape[0])
                     output, h, c = model(batch_x, batch_y_h, h, c)
@@ -780,6 +865,7 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
                 elif model_name == 'harhn':
                     output = model(batch_x, batch_y_h)
 
+                # Collect validation loss
                 output = output.squeeze(1)
                 preds.append(output.detach().cpu().numpy())
                 true.append(batch_y.detach().cpu().numpy())
@@ -792,7 +878,7 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
         scheduler.step(mse_val / data_val_loader.__len__())
         lr = opt.param_groups[0]['lr']
 
-        # early_stopping needs the validation loss to check if it has decresed, 
+        # early_stopping needs the validation loss to check if it has decreased, 
         # and if it has, it will make a checkpoint of the current model
         early_stopping(mse_val / data_val_loader.__len__(), model)
 
@@ -805,8 +891,6 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
               "LR: ", lr
              )
         if (plot == True) and (i % 10 == 0):
-#             preds = preds*(target_train_max - target_train_min) + target_train_min
-#             true = true*(target_train_max - target_train_min) + target_train_min
             preds = target_scaler.inverse_transform(preds)
             true = target_scaler.inverse_transform(true)
             mse = mean_squared_error(true, preds)
@@ -820,6 +904,7 @@ def nn_train(model, model_name, epochs, data_train_loader, data_val_loader, opt,
             plt.show()
     return
 ```
+
 </details>
 
 Once the training process is complete, we can visually the performance of the model on the test dataset. If we see that the model can make accurate predictions on the test dataset, we know that it has successfully learned patterns in the time series data and can generalize these patterns to unseen data. However, if the model predictions resemble the training and validation dataset, we can assume that the model has only learned to memorize the data rather than extract generalizable patterns. Therefore, the model may be overfit and we would need to adjust the hyperparameters.
@@ -829,6 +914,18 @@ Once the training process is complete, we can visually the performance of the mo
 
 ```python
 def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
+    """
+    This function performs the neural network evaluation protocol
+
+    Args:
+        model (PyTorch object): _description_
+        model_name (str): model name. Options are 'lstm', 'darnn', or 'harhn'
+        data_test_loader (PyTorch DataLoader object): test data loader
+        target_scaler (Normalizer object): Normalizer object to de-normalize target data for plotting
+        device (str): training device (e.g., 'cpu' or 'cuda')
+        cols (list): list of feature names for feature importance plotting
+        
+    """
     
     with torch.no_grad():
         mse_val = 0
@@ -838,10 +935,12 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
         alphas = []
         betas = []
         for batch_x, batch_y_h, batch_y in data_test_loader:
+            # Extract data
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
             batch_y_h = batch_y_h.to(device)
             
+            # Forward prediction
             if model_name == 'lstm':
                 h, c = model.init_hidden_internal(batch_x.shape[0])
                 output, h, c = model(batch_x, batch_y_h, h, c)
@@ -851,19 +950,21 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
                 betas.append(beta.detach().cpu().numpy())
             elif model_name == 'harhn':
                 output = model(batch_x, batch_y_h)
-                
-            output = output.squeeze(1)
             
+            # test loss
+            output = output.squeeze(1)
             preds.append(output.detach().cpu().numpy())
             true.append(batch_y.detach().cpu().numpy())
             mse_val += loss(torch.squeeze(output), batch_y).item()*batch_x.shape[0]
     preds = np.concatenate(preds)
     true = np.concatenate(true)
+    
+    # Collect attention weights
     if model_name == 'darnn':
         alphas = np.concatenate(alphas)
         betas = np.concatenate(betas)
     
-    # De-normalize
+    # De-normalize target data
     preds = target_scaler.inverse_transform(preds)
     true = target_scaler.inverse_transform(true)
     
@@ -875,7 +976,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     err = true - preds
     
     # Time series plot
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 6), facecolor=(1, 1, 1))
     plt.plot(preds, label='preds')
     plt.plot(true, marker=".", markersize=10, color='black', linestyle = 'None', label='actual')
     plt.legend(loc="upper left")
@@ -885,7 +986,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     plt.show()
     
     # Scatter Plot
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(8, 8), facecolor=(1, 1, 1))
     sns.regplot(ax=ax, x=true, y=preds)
     ax.set_xlabel('True Values', fontsize=12)
     ax.set_ylabel('Predictions', fontsize=12)
@@ -893,31 +994,33 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     ax.set_aspect('equal', 'box')
     
     # Error Histogram
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor=(1, 1, 1))
     sns.histplot(ax=ax, data=err, kde=True, bins=10)
     ax.set_xlabel('Prediction Errors (U.S. $)', fontsize=12)
     ax.set_ylabel('Count', fontsize=12)
     ax.set_title(f'Model Testing Prediction Errors \n MSE = {mse:.3f} \n MAE = {mae:.3f}', fontsize=15)
         
+    # Feature importance
     if model_name == 'darnn':
         alphas = alphas.mean(axis=0)
         betas = betas.mean(axis=0).squeeze()
-        # betas = betas[::-1]
+        betas = betas[::-1]
 
+        # Average attention weights of feature/timestep
         attn = np.zeros([len(alphas), len(betas)])
         for i in range(len(alphas)):
             for j in range(len(betas)):
                 attn[i,j] = (alphas[i] + betas[j]) / 2
-                
+        
+        # max and min attention for plotting and color thresholding                
         max_attn = np.amax(attn)
         min_attn = np.amin(attn)
         min_range = min_attn + (0.25 * (max_attn - min_attn))
         max_range = max_attn - (0.25 * (max_attn - min_attn))
 
         # Attention Weights Heatmap
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots(figsize=(10, 10), facecolor=(1, 1, 1))
         im = ax.imshow(attn, cmap='rainbow')
-        # cols = features_targets.columns[0:-1].tolist()
         ax.set_xticks(np.arange(len(betas)))
         ax.set_yticks(np.arange(len(alphas)))
         ax.set_xticklabels(["t-"+str(i) for i in np.arange(len(betas), 0, -1)])
@@ -937,7 +1040,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
         plt.show()
         
         # Feature Importance Bar Plot
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(8, 8), facecolor=(1, 1, 1))
         plt.title("Feature Importance\n(All Timesteps along Lookback Window)")
         plt.bar(range(len(cols)), alphas)
         plt.xticks(range(len(cols)), cols, rotation=90)
@@ -945,6 +1048,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     
     return mse, mae, r2, pcc, preds, true, alphas, betas
 ```
+
 </details>
 
 This above code generates model performance metrics, a plot comparing the model predictions and actual data points on the test dataset, a scatter plot that visualizes the correlation between the predicted and actual values on the test dataset, and a prediction error histogram. For the DA-RNN, a heat map of the average attention weights with respect to the different feature variables and previous timesteps is also generated. Finally, a bar plot is generated showing the relative importance of each feature variable according to the attention weight values.  
@@ -970,19 +1074,42 @@ Now that we have trained neural networks and validated their performance, we can
 
 ```python
 def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x_scaler, y_his_scaler, target_scaler, device, dates, plot_range=10):
+    """
+    This function uses a trained and tested neural network to forecast the gas price for the next prediction period
+    The previous predicted values and the newly forecasted value are plotted along with the actual data points
+
+    Args:
+        model (PyTorch object): _description_
+        model_name (str): model name. Options are 'lstm', 'darnn', or 'harhn'
+        data (numpy array): full dataset with features as columns and the target variable as the last column
+        timesteps (int): length of the rolling lookback window
+        n_timeseries (int): input size of the model aka the number of features
+        true (numpy array): actual target variable data points
+        preds (numpy array): predicted target variable data points
+        x_scaler (Normalize object): Normalize object for the feature data
+        y_his_scaler (Normalize object): Normalize object for the target history data
+        target_scaler (Normalize object): Normalize object for the target data
+        device (str): training device (e.g., 'cpu' or 'cuda')
+        dates (pandas datetime object): date range to plot
+        plot_range (int, optional): Data point indices to plot. Defaults to 10.
+    """
     
     data = data.to_numpy()
     
+    # last sequence of available data
     data_x_unseen = data[-timesteps:,:-1]
     y_hist_unseen = data[-timesteps:,-1]
     y_hist_unseen = np.expand_dims(y_hist_unseen, axis=1)
     
+    # normalize data
     data_x_unseen = x_scaler.transform(data_x_unseen)
     y_hist_unseen = y_his_scaler.transform(y_hist_unseen)
     
+    # convert numpy data to tensors
     x = torch.Tensor(data_x_unseen).float().to(device).unsqueeze(0)
     y_hist = torch.Tensor(y_hist_unseen).float().to(device).unsqueeze(0)
 
+    # forward prediction
     model.eval()
     if model_name == 'lstm':
         h0, c0 = model.init_hidden_internal(x.shape[0])
@@ -995,16 +1122,19 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     prediction = prediction.cpu().detach().numpy()
 
     # prepare plots
-
+    
+    # initialize
     to_plot_data_y_val = np.zeros(plot_range)
     to_plot_data_y_val_pred = np.zeros(plot_range)
     to_plot_data_y_test_pred = np.zeros(plot_range)
 
+    # only plot within the specified range
     to_plot_data_y_val[:plot_range-1] = true[-plot_range+1:]
     to_plot_data_y_val_pred[:plot_range-1] = preds[-plot_range+1:]
 
     to_plot_data_y_test_pred[plot_range-1] = target_scaler.inverse_transform(prediction)
 
+    # replace zeros with None
     to_plot_data_y_val = np.where(to_plot_data_y_val == 0, None, to_plot_data_y_val)
     to_plot_data_y_val_pred = np.where(to_plot_data_y_val_pred == 0, None, to_plot_data_y_val_pred)
     to_plot_data_y_test_pred = np.where(to_plot_data_y_test_pred == 0, None, to_plot_data_y_test_pred)
@@ -1014,7 +1144,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     next_week = plot_date_test[-1] + dt.timedelta(days=7)
     plot_date_test.append(next_week)
 
-    fig = figure(figsize=(25, 5), dpi=80)
+    fig = figure(figsize=(25, 5), dpi=80, facecolor=(1, 1, 1))
     fig.patch.set_facecolor((1.0, 1.0, 1.0))
     plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices", marker=".", markersize=10, color='black')
     plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted prices", marker=".", markersize=10)
@@ -1028,6 +1158,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     
     return
 ```
+
 </details>
 
 ## Model Comparisons
