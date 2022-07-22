@@ -6,8 +6,6 @@ output prediction.
 The purpose of these class objects is to contain model information and 
 functionality to be passed to different training and evaluation scripts. 
 
-DA-RNN Paper: https://arxiv.org/abs/1704.02971
-
 """
 
 import torch
@@ -20,20 +18,20 @@ from torch.autograd import Variable
 
 class LSTM(nn.Module):
 
-    def __init__(self, num_classes, input_size, hidden_size, num_layers, seq_length, device, dropout=0.1):
+    def __init__(self, num_outputs, input_size, hidden_size, num_layers, seq_length, device, dropout=0.1):
         super(LSTM, self).__init__()
         
-        self.num_classes = num_classes
-        self.num_layers = num_layers
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.seq_length = seq_length
-        self.device = device
+        self.num_outputs = num_outputs # model output size
+        self.num_layers = num_layers # number of lstm layers
+        self.input_size = input_size # model input size
+        self.hidden_size = hidden_size # number of hidden units in each lstm layer
+        self.seq_length = seq_length # rolling lookback window length
+        self.device = device # training device (i.e., 'cpu' or 'cuda')
         
+        # Define network layer types
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True, dropout=dropout)
-        
-        self.fc = nn.Linear(hidden_size, num_classes)
+                            num_layers=num_layers, batch_first=True, dropout=dropout)      
+        self.fc = nn.Linear(hidden_size, num_outputs)
         
         # Define activation function
         self.relu = nn.ReLU()
@@ -46,7 +44,7 @@ class LSTM(nn.Module):
         # combine  x and y history tensors
         x = torch.cat((x, y_hist), dim=-1)
         
-        output, (hn, cn) = self.lstm(x, (h_0, c_0)) #lstm with input, hidden, and internal state
+        output, (hn, cn) = self.lstm(x, (h_0, c_0)) # lstm with input, hidden, and internal state
         out = self.relu(output[:,-1,:])
         out = self.fc(out) 
         
