@@ -7,6 +7,9 @@ from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
 from neural_network_functions import nn_eval, nn_forecast
 
+st.set_page_config(layout="wide")
+st.write("# Seattle Gas Price Prediction App")
+
 ## load data
 def download_data(url, name='', usecols=None, sheet_name=1, header=2): 
     """
@@ -240,8 +243,6 @@ model_name = 'darnn'
 print('complete')
 
 ## APP
-st.set_page_config(layout="wide")
-st.write("# Seattle Gas Price Prediction App")
 
 link = "[Source Code](https://github.com/chrisprasanna/Predicting_Seattle_Gas_Prices_with_ML)"
 st.markdown(link, unsafe_allow_html=True)
