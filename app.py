@@ -286,7 +286,7 @@ elif model_selection == 'HARHN':
     model_name = 'harhn'
 
 st.write("# 3. Select the Number of Data Points to Plot")
-plot_length = st.slider(min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
+plot_length = st.slider('', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
 st.write("# 4. Launch Forecast")
 if st.button('Make Prediction'):
