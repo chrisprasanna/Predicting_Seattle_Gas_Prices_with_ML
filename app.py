@@ -265,7 +265,8 @@ model_selection = st.selectbox(
             "LSTM",
             "DA-RNN",
             "HARHN"
-        ]
+        ],
+        index=1
     )
 if model_selection == "LSTM":
     model = LSTM(num_outputs=1, input_size=data.shape[1], hidden_size=64, num_layers=2,
