@@ -236,7 +236,7 @@ target_train = target_scaler.fit_transform(target_train)
 ## load model
 model = DARNN(N=data.shape[1]-1, M=64, P=64,
               T=8, device='cpu')
-model.load_state_dict(torch.load(r"C:\Users\cpras\Documents\GitHub\Forecasting_Natural_Gas_Stock_Price\models\darnn.pt"))
+model.load_state_dict(torch.load(r"models\darnn.pt"))
 model_name = 'darnn'
 
 print('complete')
