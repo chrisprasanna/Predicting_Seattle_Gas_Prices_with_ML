@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import requests
 import torch
+from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
+from neural_network_functions import nn_eval, nn_forecast
 
 st.header("Seattle Gas Price Prediction App")
 
@@ -231,14 +233,58 @@ X_train = x_scaler.fit_transform(X_train)
 y_his_train = y_his_scaler.fit_transform(y_his_train)
 target_train = target_scaler.fit_transform(target_train)
 
-# Normalize
-X = x_scaler.transform(X)
-y = y_his_scaler.transform(y)
-target = target_scaler.transform(target)
-
 ## load model
-# darnn = DARNN(N=data.shape[1]-1, M=64, P=64,
-#               T=8, device='cpu')
-darnn = torch.load(r"C:\Users\cpras\Documents\GitHub\Forecasting_Natural_Gas_Stock_Price\models\darnn.pt")
+model = DARNN(N=data.shape[1]-1, M=64, P=64,
+              T=8, device='cpu')
+model.load_state_dict(torch.load(r"C:\Users\cpras\Documents\GitHub\Forecasting_Natural_Gas_Stock_Price\models\darnn.pt"))
+model_name = 'darnn'
 
 print('complete')
+
+## APP
+if st.checkbox('Show Data'):
+    data
+
+plot_length = st.slider('Number of Data Points to Plot', min_value=0, max_value=int(len(data)), value=10, step=1)
+
+if st.button('Make Prediction'):
+    
+    # Normalize
+    X = x_scaler.transform(X)
+    y = y_his_scaler.transform(y)
+    target = target_scaler.transform(target)
+    
+    # Make Dataloader
+    X_t = torch.Tensor(X[-plot_length:])
+    y_t = torch.Tensor(y[-plot_length:])
+    target_t = torch.Tensor(target[-plot_length:])
+    data_loader = DataLoader(TensorDataset(X_t, y_t, target_t), shuffle=False, batch_size=1)
+    
+    # Get true and predicted time series
+    _, _, _, _, preds, true, _, _ = nn_eval(model=model, 
+                                            model_name=model_name, 
+                                            data_test_loader=data_loader, 
+                                            target_scaler=target_scaler, 
+                                            device='cpu', 
+                                            cols=feature_names
+                                            )
+    
+    # Forecast
+    fig, prediction = nn_forecast(model = model,
+            model_name = model_name, 
+            data = data, 
+            timesteps = timesteps, 
+            n_timeseries = data.shape[1] - 1, 
+            true = true, 
+            preds = preds,
+            x_scaler = x_scaler, 
+            y_his_scaler = y_his_scaler, 
+            target_scaler = target_scaler,
+            device='cpu', 
+            dates=data.index.tolist()[timesteps:],
+            plot_range=plot_length
+           )
+    print("final pred", np.squeeze(prediction, -1))
+    
+    st.pyplot(fig)
+    st.write(f"Next Week's Gas Price in Seattle: ${prediction:.2f}")

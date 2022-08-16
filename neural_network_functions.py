@@ -391,4 +391,4 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 
     print(f'{model_name.upper()} Predicted Seattle Gas Price of the next week: ${to_plot_data_y_test_pred[plot_range-1]:.2f}')
     
-    return
+    return fig, to_plot_data_y_test_pred[plot_range-1]
