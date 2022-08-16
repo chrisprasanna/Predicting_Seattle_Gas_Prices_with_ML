@@ -7,7 +7,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
 from neural_network_functions import nn_eval, nn_forecast
 
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 st.write("# Seattle Gas Price Prediction App")
 
 ## load data
@@ -337,7 +337,7 @@ if st.button('Make Prediction'):
     fig.set_dpi(100)
     print("final pred", np.squeeze(prediction, -1))
     
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
     st.write(f"Next Week's Gas Price in Seattle: ${prediction:.2f}")
     
     col1, col2 = st.columns(2)
