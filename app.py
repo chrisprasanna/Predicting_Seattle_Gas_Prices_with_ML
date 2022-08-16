@@ -245,7 +245,32 @@ print('complete')
 if st.checkbox('Show Data'):
     data
 
-page = st.sidebar.selectbox(
+def update_model(model, model_selection):
+    if model_selection == "LSTM":
+        model = LSTM(num_classes=1, input_size=data.shape[1], hidden_size=64, num_layers=2,
+             seq_length=timesteps, device='cpu', dropout=0.2)
+        model.load_state_dict(torch.load("./models/lstm.pt"))
+        model_name = 'lstm'
+    elif model_selection == "DA-RNN":
+        model = DARNN(N=data.shape[1]-1, M=64, P=64,
+              T=8, device='cpu')
+        model.load_state_dict(torch.load("./models/darnn.pt"))
+        model_name = 'darnn'
+    elif model_selection == 'HRHN':
+        model = HARHN(n_conv_layers=3, 
+              T=timesteps, 
+              in_feats=data.shape[1]-1, 
+              target_feats=1, 
+              n_units_enc=64, 
+              n_units_dec=64, 
+              device='cpu'
+             )
+        model.load_state_dict(torch.load("./models/harhn.pt"))
+        model_name = 'harhn'
+    
+    return model, model_name
+
+model_selection = st.sidebar.selectbox(
         "Select a Neural Network Model",
         [
             "LSTM",
@@ -253,6 +278,7 @@ page = st.sidebar.selectbox(
             "HRHN"
         ]
     )
+model, model_name = update_model(model, model_selection)
 
 plot_length = st.slider('Number of Data Points to Plot', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
