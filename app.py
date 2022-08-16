@@ -240,6 +240,7 @@ model_name = 'darnn'
 print('complete')
 
 ## APP
+st.set_page_config(layout="wide")
 st.sidebar.header("Seattle Gas Price Prediction App")
 
 st.write("# 1. Data Overview")
