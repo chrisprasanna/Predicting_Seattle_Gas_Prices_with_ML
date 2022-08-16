@@ -258,7 +258,7 @@ if st.button('Make Prediction'):
     X_t = torch.Tensor(X[-plot_length:])
     y_t = torch.Tensor(y[-plot_length:])
     target_t = torch.Tensor(target[-plot_length:])
-    data_loader = DataLoader(TensorDataset(X_t, y_t, target_t), shuffle=False, batch_size=1)
+    data_loader = DataLoader(TensorDataset(X_t, y_t, target_t), shuffle=False, batch_size=32)
     
     # Get true and predicted time series
     _, _, _, _, preds, true, _, _ = nn_eval(model=model, 
