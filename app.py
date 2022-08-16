@@ -256,8 +256,8 @@ if st.checkbox('Show Data'):
 #     )
 st.write("# 2. Select a Model")
 model_selection = st.selectbox(
+        "",
         [
-            "",
             "LSTM",
             "DA-RNN",
             "HARHN"
