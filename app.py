@@ -300,14 +300,14 @@ st.write("## 3. Select Range of Dates to Plot")
 start, end = st.columns(2)
 start_date = start.selectbox(
     "Start Date",
-    data_dates[:-5]
+    data_dates[:-5],
+    index=len(data_dates)-10
 )
 # end.write(f"{data_dates[-1]} + {dt.timedelta(days=7)}")
 next_week = data_dates[-1] + dt.timedelta(days=7)
 end_date = end.selectbox(
     "End Date",
-    [next_week],
-    index=len(data_dates)-10
+    [next_week]
 )
 plot_length = len(data_dates) - data_dates.index(start_date)
 
