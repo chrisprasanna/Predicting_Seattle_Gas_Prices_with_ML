@@ -245,7 +245,7 @@ print('complete')
 if st.checkbox('Show Data'):
     data
 
-plot_length = st.slider('Number of Data Points to Plot', min_value=0, max_value=int(len(data)), value=10, step=1)
+plot_length = st.slider('Number of Data Points to Plot', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
 if st.button('Make Prediction'):
     
