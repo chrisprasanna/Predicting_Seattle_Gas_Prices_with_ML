@@ -122,7 +122,6 @@ scipy==1.7.3
 seaborn==0.11.2
 semver==2.13.0
 Send2Trash==1.8.0
-setuptools==61.2.0
 sip==4.19.13
 six==1.16.0
 smmap==3.0.5
