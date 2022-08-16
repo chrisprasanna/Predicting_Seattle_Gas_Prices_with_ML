@@ -4,6 +4,7 @@ old
 logs
 .ipynb_checkpoints
 *.pt
+!models/*.pt
 *.xls
 .vscode
 .markdownlint.json
