@@ -302,7 +302,11 @@ start_date = start.selectbox(
     "Start Date",
     data_dates[:-5]
 )
-end.write(f"{data_dates[-1]} + {dt.timedelta(days=7)}")
+# end.write(f"{data_dates[-1]} + {dt.timedelta(days=7)}")
+end_date = end.selectbox(
+    "End Date",
+    data_dates[-1] + dt.timedelta(days=7)
+)
 plot_length = len(data_dates) - data_dates.index(start_date)
 
 st.write("## 4. Launch Forecast")
