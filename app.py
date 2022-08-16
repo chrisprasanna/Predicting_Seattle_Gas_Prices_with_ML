@@ -241,12 +241,12 @@ print('complete')
 
 ## APP
 st.set_page_config(layout="wide")
-st.sidebar.header("Seattle Gas Price Prediction App")
+st.header("# Seattle Gas Price Prediction App")
 link = "[Source Code](https://github.com/chrisprasanna/Predicting_Seattle_Gas_Prices_with_ML)"
-st.sidebar.markdown(link, unsafe_allow_html=True)
+st.markdown(link, unsafe_allow_html=True)
 # st.sidebar.write("[Source Code](https://github.com/chrisprasanna/Predicting_Seattle_Gas_Prices_with_ML)")
 
-st.write("# 1. Data Overview")
+st.write("## 1. Data Overview")
 if st.checkbox('Show Data'):
     data
 
@@ -258,7 +258,7 @@ if st.checkbox('Show Data'):
 #             "HARHN"
 #         ]
 #     )
-st.write("# 2. Select a Model")
+st.write("## 2. Select a Model")
 model_selection = st.selectbox(
         "",
         [
@@ -290,10 +290,10 @@ elif model_selection == 'HARHN':
     model.load_state_dict(torch.load("./models/harhn.pt"))
     model_name = 'harhn'
 
-st.write("# 3. Select the Number of Data Points to Plot")
+st.write("## 3. Select the Number of Data Points to Plot")
 plot_length = st.slider('', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
-st.write("# 4. Launch Forecast")
+st.write("## 4. Launch Forecast")
 if st.button('Make Prediction'):
     
     # Normalize
