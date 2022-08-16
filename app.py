@@ -242,10 +242,20 @@ model_name = 'darnn'
 print('complete')
 
 ## APP
+st.write("# 1. Data Overview")
 if st.checkbox('Show Data'):
     data
 
-model_selection = st.sidebar.selectbox(
+# model_selection = st.sidebar.selectbox(
+#         "Select a Neural Network Model",
+#         [
+#             "LSTM",
+#             "DA-RNN",
+#             "HARHN"
+#         ]
+#     )
+st.write("# 2. Select a Model")
+model_selection = st.selectbox(
         "Select a Neural Network Model",
         [
             "LSTM",
@@ -275,8 +285,10 @@ elif model_selection == 'HARHN':
     model.load_state_dict(torch.load("./models/harhn.pt"))
     model_name = 'harhn'
 
+st.write("# 3. Select the Number of Data Points to Plot")
 plot_length = st.slider('Number of Data Points to Plot', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
+st.write("# 4. Launch Forecast")
 if st.button('Make Prediction'):
     
     # Normalize
