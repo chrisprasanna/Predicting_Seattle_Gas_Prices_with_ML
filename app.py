@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
+import datetime as dt
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
@@ -240,6 +241,8 @@ model = DARNN(N=data.shape[1]-1, M=64, P=64,
 model.load_state_dict(torch.load("./models/darnn.pt"))
 model_name = 'darnn'
 
+data_dates = data.index.tolist()[timesteps:]
+
 print('complete')
 
 ## APP
@@ -292,8 +295,15 @@ elif model_selection == 'HARHN':
     model.load_state_dict(torch.load("./models/harhn.pt"))
     model_name = 'harhn'
 
-st.write("## 3. Select the Number of Data Points to Plot")
-plot_length = st.slider('', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
+st.write("## 3. Select Range of Dates to Plot")
+# plot_length = st.slider('', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
+start, end = st.columns(2)
+start_date = start.selectbox(
+    "Start Date",
+    data_dates[:-5]
+)
+end.write(f"{data_dates[-1]} + {dt.timedelta(days=7)}")
+plot_length = len(data_dates) - data_dates.index(start_date)
 
 st.write("## 4. Launch Forecast")
 if st.button('Make Prediction'):
@@ -330,7 +340,7 @@ if st.button('Make Prediction'):
             y_his_scaler = y_his_scaler, 
             target_scaler = target_scaler,
             device='cpu', 
-            dates=data.index.tolist()[timesteps:],
+            dates=data_dates,
             plot_range=plot_length
            )
     fig.set_size_inches(12, 4)
