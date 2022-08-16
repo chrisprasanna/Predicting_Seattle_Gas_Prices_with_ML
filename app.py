@@ -248,8 +248,8 @@ if st.checkbox('Show Data'):
 page = st.sidebar.selectbox(
         "Select a Neural Network Model",
         [
-            "LSTM"
-            "DA-RNN"
+            "LSTM",
+            "DA-RNN",
             "HRHN"
         ]
     )
