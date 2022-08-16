@@ -354,6 +354,8 @@ if st.button('Make Prediction'):
     print("final pred", np.squeeze(prediction, -1))
     
     st.pyplot(fig, use_container_width=True)
+    
+    st.write("## 5. Results")
     st.write(f"Next Week's Gas Price in Seattle: ${prediction:.2f}")
     
     col1, col2 = st.columns(2)
