@@ -306,7 +306,8 @@ start_date = start.selectbox(
 next_week = data_dates[-1] + dt.timedelta(days=7)
 end_date = end.selectbox(
     "End Date",
-    [next_week]
+    [next_week],
+    index=len(data_dates)-10
 )
 plot_length = len(data_dates) - data_dates.index(start_date)
 
