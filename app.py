@@ -309,8 +309,8 @@ next_week = data_dates[-1] + dt.timedelta(days=7)
 #     "End Date",
 #     [next_week]
 # )
-st.write("End Date")
-st.write(str(next_week))
+end.write("End Date")
+end.write(str(next_week))
 plot_length = len(data_dates) - data_dates.index(start_date)
 
 st.write("## 4. Launch Forecast")
