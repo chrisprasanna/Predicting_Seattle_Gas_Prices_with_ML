@@ -254,7 +254,7 @@ model_selection = st.sidebar.selectbox(
         ]
     )
 if model_selection == "LSTM":
-    model = LSTM(num_classes=1, input_size=data.shape[1], hidden_size=64, num_layers=2,
+    model = LSTM(num_outputs=1, input_size=data.shape[1], hidden_size=64, num_layers=2,
             seq_length=timesteps, device='cpu', dropout=0.2)
     model.load_state_dict(torch.load("./models/lstm.pt"))
     model_name = 'lstm'
