@@ -250,7 +250,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     sns.regplot(ax=ax, x=true, y=preds)
     ax.set_xlabel('True Values', fontsize=12)
     ax.set_ylabel('Predictions', fontsize=12)
-    ax.set_title(f'Test Prediction Correlation \n R2 = {r2:.3f} \n PCC = {pcc:.3f}', fontsize=15)
+    ax.set_title(f'{model_name.upper()} Test Prediction Correlation \n R2 = {r2:.3f} \n PCC = {pcc:.3f}', fontsize=15)
     ax.set_aspect('equal', 'box')
     
     # Error Histogram
@@ -258,7 +258,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
     sns.histplot(ax=ax, data=err, kde=True, bins=10)
     ax.set_xlabel('Prediction Errors (U.S. $)', fontsize=12)
     ax.set_ylabel('Count', fontsize=12)
-    ax.set_title(f'Model Testing Prediction Errors \n MSE = {mse:.3f} \n MAE = {mae:.3f}', fontsize=15)
+    ax.set_title(f'{model_name.upper()} Testing Prediction Errors \n MSE = {mse:.3f} \n MAE = {mae:.3f}', fontsize=15)
         
     # Feature importance
     if model_name == 'darnn':
@@ -301,7 +301,7 @@ def nn_eval(model, model_name, data_test_loader, target_scaler, device, cols):
         
         # Feature Importance Bar Plot
         plt.figure(figsize=(8, 8), facecolor=(1, 1, 1))
-        plt.title("Feature Importance\n(All Timesteps along Lookback Window)")
+        plt.title("DA-RNN Feature Importance\n(All Timesteps along Lookback Window)")
         plt.bar(range(len(cols)), alphas)
         plt.xticks(range(len(cols)), cols, rotation=90)
         plt.ylabel('Attention Weight')
