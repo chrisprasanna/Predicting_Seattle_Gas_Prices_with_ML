@@ -291,7 +291,7 @@ if st.button('Make Prediction'):
     data_loader = DataLoader(TensorDataset(X_t, y_t, target_t), shuffle=False, batch_size=32)
     
     # Get true and predicted time series
-    _, _, _, _, preds, true, _, _ = nn_eval(model=model, 
+    mse, mae, r2, pcc, preds, true, _, _ = nn_eval(model=model, 
                                             model_name=model_name, 
                                             data_test_loader=data_loader, 
                                             target_scaler=target_scaler, 
@@ -320,3 +320,9 @@ if st.button('Make Prediction'):
     
     st.pyplot(fig)
     st.write(f"Next Week's Gas Price in Seattle: ${prediction:.2f}")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("MSE", f"{mse} $/gal")
+    col2.metric("MAE", f"{mae} $/gal")
+    col3.metric("R2 Score", f"{r2}")
+    col4.metric("PCC", f"{pcc}")
