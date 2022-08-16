@@ -70,7 +70,6 @@ LunarCalendar==0.0.9
 MarkupSafe==2.1.1
 matplotlib==3.5.1
 matplotlib-inline==0.1.2
-mccabe==0.7.0
 mistune==0.8.4
 multidict==6.0.2
 munkres==1.1.4
