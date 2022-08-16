@@ -242,6 +242,9 @@ print('complete')
 ## APP
 st.set_page_config(layout="wide")
 st.sidebar.header("Seattle Gas Price Prediction App")
+link = "[Source Code](https://github.com/chrisprasanna/Predicting_Seattle_Gas_Prices_with_ML)"
+st.sidebar.markdown(link, unsafe_allow_html=True)
+# st.sidebar.write("[Source Code](https://github.com/chrisprasanna/Predicting_Seattle_Gas_Prices_with_ML)")
 
 st.write("# 1. Data Overview")
 if st.checkbox('Show Data'):
