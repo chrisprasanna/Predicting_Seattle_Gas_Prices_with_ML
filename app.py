@@ -250,7 +250,7 @@ model_selection = st.sidebar.selectbox(
         [
             "LSTM",
             "DA-RNN",
-            "HRHN"
+            "HARHN"
         ]
     )
 if model_selection == "LSTM":
