@@ -245,6 +245,15 @@ print('complete')
 if st.checkbox('Show Data'):
     data
 
+page = st.sidebar.selectbox(
+        "Select a Neural Network Model",
+        [
+            "LSTM"
+            "DA-RNN"
+            "HRHN"
+        ]
+    )
+
 plot_length = st.slider('Number of Data Points to Plot', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
 if st.button('Make Prediction'):
@@ -284,7 +293,8 @@ if st.button('Make Prediction'):
             dates=data.index.tolist()[timesteps:],
             plot_range=plot_length
            )
-    fig.set_size_inches(18.5, 10.5)
+    fig.set_size_inches(10, 5)
+    fig.set_dpi(100)
     print("final pred", np.squeeze(prediction, -1))
     
     st.pyplot(fig)
