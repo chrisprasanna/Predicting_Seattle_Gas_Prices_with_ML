@@ -7,7 +7,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
 from neural_network_functions import nn_eval, nn_forecast
 
-st.header("Seattle Gas Price Prediction App")
+st.sidebar.header("Seattle Gas Price Prediction App")
 
 ## load data
 def download_data(url, name='', usecols=None, sheet_name=1, header=2): 
@@ -256,7 +256,6 @@ if st.checkbox('Show Data'):
 #     )
 st.write("# 2. Select a Model")
 model_selection = st.selectbox(
-        "Select a Neural Network Model",
         [
             "LSTM",
             "DA-RNN",
@@ -286,7 +285,7 @@ elif model_selection == 'HARHN':
     model_name = 'harhn'
 
 st.write("# 3. Select the Number of Data Points to Plot")
-plot_length = st.slider('Number of Data Points to Plot', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
+plot_length = st.slider(min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 
 st.write("# 4. Launch Forecast")
 if st.button('Make Prediction'):
