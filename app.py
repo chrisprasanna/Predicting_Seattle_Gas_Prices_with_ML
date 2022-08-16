@@ -7,8 +7,6 @@ from torch.utils.data import TensorDataset, DataLoader
 from neural_network_classes import LSTM, DARNN, HARHN
 from neural_network_functions import nn_eval, nn_forecast
 
-st.sidebar.header("Seattle Gas Price Prediction App")
-
 ## load data
 def download_data(url, name='', usecols=None, sheet_name=1, header=2): 
     """
@@ -242,6 +240,8 @@ model_name = 'darnn'
 print('complete')
 
 ## APP
+st.sidebar.header("Seattle Gas Price Prediction App")
+
 st.write("# 1. Data Overview")
 if st.checkbox('Show Data'):
     data
