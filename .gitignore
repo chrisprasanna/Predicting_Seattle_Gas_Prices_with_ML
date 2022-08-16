@@ -9,4 +9,4 @@ logs
 .vscode
 .markdownlint.json
 research
-yml_to_txt.txt
+yml_to_txt.py
