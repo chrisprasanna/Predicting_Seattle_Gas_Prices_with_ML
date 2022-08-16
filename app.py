@@ -321,8 +321,9 @@ if st.button('Make Prediction'):
     st.pyplot(fig)
     st.write(f"Next Week's Gas Price in Seattle: ${prediction:.2f}")
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2 = st.columns(2)
     col1.metric("Root-Mean-Square Error", f"{mse**0.5:.2f} $/gal")
     col2.metric("Mean Absolute Error", f"{mae:.2f} $/gal")
+    col3, col4 = st.columns(2)
     col3.metric("Coefficient of Determination", f"{r2:.2f}")
     col4.metric("Pearson Correlation Coefficient", f"{pcc:.2f}")
