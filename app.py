@@ -258,12 +258,12 @@ if model_selection == "LSTM":
             seq_length=timesteps, device='cpu', dropout=0.2)
     model.load_state_dict(torch.load("./models/lstm.pt"))
     model_name = 'lstm'
-elif model_selection == "DA-RNN":
+elif model_selection == "DARNN":
     model = DARNN(N=data.shape[1]-1, M=64, P=64,
             T=8, device='cpu')
     model.load_state_dict(torch.load("./models/darnn.pt"))
     model_name = 'darnn'
-elif model_selection == 'HRHN':
+elif model_selection == 'HARHN':
     model = HARHN(n_conv_layers=3, 
             T=timesteps, 
             in_feats=data.shape[1]-1, 
