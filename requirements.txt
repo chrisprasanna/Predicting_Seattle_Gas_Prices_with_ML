@@ -120,7 +120,6 @@ ruamel.yaml.clib==0.2.6
 scikit-learn==1.0.2
 scipy==1.7.3
 seaborn==0.11.2
-sip==4.19.13
 six==1.16.0
 smmap==3.0.5
 sniffio==1.2.0
