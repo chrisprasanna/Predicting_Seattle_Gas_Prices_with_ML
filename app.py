@@ -293,7 +293,7 @@ if st.button('Make Prediction'):
             dates=data.index.tolist()[timesteps:],
             plot_range=plot_length
            )
-    fig.set_size_inches(10, 5)
+    fig.set_size_inches(12, 4)
     fig.set_dpi(100)
     print("final pred", np.squeeze(prediction, -1))
     
