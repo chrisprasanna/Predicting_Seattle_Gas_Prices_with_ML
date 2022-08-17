@@ -3,6 +3,7 @@
 ## Table of Contents <!-- omit in toc -->
 
 - [Overview](#overview)
+- [Web App](#web-app)
 - [Installation](#installation)
 - [Code Description](#code-description)
 - [Model Comparisons](#model-comparisons)
@@ -26,7 +27,14 @@ The machine learning (ML) workflow presented in this project goes through the fo
 
 All these steps are included in the provided Jupyter Notebook. Neural network architecture classes and functions (train, evaluate, forecast) are provided in separate Python files within the directory.
 
-All ready? Let's get to it!
+## Web App
+A deployed web interface to do Seattle Gas Price forecasts interactively is provided below.
+
+[Web App Link](https://chrisprasanna-predicting-seattle-gas-prices-with-ml-app-76r3fm.streamlitapp.com/)
+
+![Alt Text](.images/../images/app_capture.gif)
+
+I used Streamlit, a python library designed for people who are not expert web developers, to build this data app to visualize model performance, key metrics, and future gas price forecasts from anywhere.
 
 ## Installation
 - Download this repository and move it to your desired working directory
@@ -1176,7 +1184,9 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 - [x] Add docstrings to all functions / clean up code
 - [ ] Create full time series prediction visualization
 - [ ] Combine histograms of deep neural network models
-- [ ] Deploy models to a web app using Flask
+- [x] Deploy models to a web app using Streamlit
+- [ ] Containerize the project with Docker
+- [ ] Develop a CI/CD workflow with GitHub Actions
 - [ ] Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
 - [ ] Do some data exploration with [Pandas Profiling](https://pypi.org/project/pandas-profiling/)
 
