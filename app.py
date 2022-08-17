@@ -298,10 +298,11 @@ elif model_selection == 'HARHN':
 st.write("## 3. Select Range of Dates to Plot")
 # plot_length = st.slider('', min_value=5, max_value=int(len(data)-timesteps), value=10, step=1)
 start, end = st.columns(2)
+start_dates = data_dates[::-1]
 start_date = start.selectbox(
     "Start Date",
-    data_dates[::-5],
-    index=9
+    start_dates[4:],
+    index=5
 )
 # end.write(f"{data_dates[-1]} + {dt.timedelta(days=7)}")
 next_week = data_dates[-1] + dt.timedelta(days=7)
