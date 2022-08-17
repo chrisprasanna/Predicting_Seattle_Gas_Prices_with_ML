@@ -28,7 +28,7 @@ The machine learning (ML) workflow presented in this project goes through the fo
 All these steps are included in the provided Jupyter Notebook. Neural network architecture classes and functions (train, evaluate, forecast) are provided in separate Python files within the directory.
 
 ## Web App
-A deployed web interface to do Seattle Gas Price forecasts interactively is provided below.
+A deployed web interface to perform Seattle Gas Price forecasts interactively is provided below.
 
 [Web App Link](https://chrisprasanna-predicting-seattle-gas-prices-with-ml-app-76r3fm.streamlitapp.com/)
 
