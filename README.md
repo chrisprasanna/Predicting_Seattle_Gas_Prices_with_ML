@@ -34,7 +34,7 @@ A deployed web interface to perform Seattle Gas Price forecasts interactively is
 
 ![Alt Text](.images/../images/app_capture.gif)
 
-I used Streamlit, a python library designed for people who are not expert web developers, to build this data app to visualize model performance, key metrics, and future gas price forecasts from anywhere.
+I used Streamlit, a python library designed for people who are not expert web developers, to build this data app to visualize model performances, key metrics, and future gas price forecasts from anywhere.
 
 ## Installation
 - Download this repository and move it to your desired working directory
