@@ -357,7 +357,7 @@ if st.button('Make Prediction'):
     print("final pred", np.squeeze(prediction, -1))
     
     st.pyplot(fig, use_container_width=True)
-    st.metric(f"Next Week's Gas Price in Seattle", f"{prediction:.2f} $/gal")
+    st.metric(f"Next Week's Gas Price in Seattle:", f"{prediction:.2f} $/gal")
     
     st.write("## 5. Model Metrics")
     
