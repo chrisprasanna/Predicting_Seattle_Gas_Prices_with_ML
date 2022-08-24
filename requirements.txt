@@ -1,4 +1,11 @@
 jupyter==1.0.0
-python==3.10.4
-pytorch==1.7.1
+pytorch==1.12.0
+prophet==1.1
+neuralprophet==0.3.2
 numpy
+matplotlib==3.5.1
+matplotlib-inline==0.1.2
+pandas==1.4.2
+requests==2.28.1
+scikit-learn==1.0.2
+scipy==1.7.3
