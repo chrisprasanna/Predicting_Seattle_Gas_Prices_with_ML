@@ -384,11 +384,13 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
     plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices", marker=".", markersize=10, color='black')
     plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted prices", marker=".", markersize=10)
     plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Predicted price for next week", marker=".", markersize=20, color='red')
-    plt.title("Predicted Seattle gas price of the next week")
+    plt.title(f"Predicted Seattle gas price of the next week ({model_name.upper()})")
+    plt.ylabel('Dollars / Gallon')
+    plt.xticks(rotation='vertical')
     plt.grid(visible=None, which='major', axis='y', linestyle='--')
     plt.legend()
     plt.show()
 
     print(f'{model_name.upper()} Predicted Seattle Gas Price of the next week: ${to_plot_data_y_test_pred[plot_range-1]:.2f}')
     
-    return
+    return fig, to_plot_data_y_test_pred[plot_range-1]
