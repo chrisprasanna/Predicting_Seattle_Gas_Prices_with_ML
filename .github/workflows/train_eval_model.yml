@@ -1,0 +1,23 @@
+name: ETL Train Save Model
+on:
+  schedule:
+    - cron: "0 17 * * 1"
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    # container: docker://dvcorg/cml-py3:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Packages
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+        run: pip install -r requirements.txt
+
+      - name: Data Acquisition
+        run: python3 acquire_data.py
+
+      - name: Data Preprocessing 
+        run: python3 preprocess_data.py
+
+      - name: Model Training
+        run: python3 train_model.py
