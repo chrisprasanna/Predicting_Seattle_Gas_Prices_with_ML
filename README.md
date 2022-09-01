@@ -1184,7 +1184,7 @@ def nn_forecast(model, model_name, data, timesteps, n_timeseries, true, preds, x
 - [x] Add docstrings to all functions / clean up code
 - [x] Create full time series prediction visualization (via web app)
 - [x] Deploy models to a web app using Streamlit
-- [ ] Containerize the project with Docker
+- [x] Containerize the project with Docker
 - [ ] Develop a CI/CD workflow with GitHub Actions (e.g., automatically train, evaluate, and deploy new models using newest data)
 - [ ] Add confidence intervals or uncertainty to model predictions - [link](https://github.com/TeaPearce/Deep_Learning_Prediction_Intervals)
 - [ ] Do some data exploration with [Pandas Profiling](https://pypi.org/project/pandas-profiling/)
